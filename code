@@ -1,0 +1,78 @@
+# Smart Plant Health Monitoring System 🌱
+
+import random
+import numpy as np
+from flask import Flask, jsonify
+from sklearn.ensemble import RandomForestClassifier
+
+# -------------------------------
+# Train ML Model
+# -------------------------------
+data = [
+    [25, 60, 30, 300, 0],  # Healthy
+    [30, 50, 20, 500, 1],  # Unhealthy
+    [35, 40, 15, 700, 1],
+    [20, 70, 40, 200, 0],
+    [28, 65, 35, 400, 0]
+]
+
+X = np.array([d[:4] for d in data])
+y = np.array([d[4] for d in data])
+
+model = RandomForestClassifier()
+model.fit(X, y)
+
+# -------------------------------
+# Sensor Simulation
+# -------------------------------
+def get_temperature():
+    return round(random.uniform(20, 40), 2)
+
+def get_humidity():
+    return round(random.uniform(30, 90), 2)
+
+def get_soil_moisture():
+    return round(random.uniform(10, 80), 2)
+
+def get_light():
+    return round(random.uniform(100, 1000), 2)
+
+# -------------------------------
+# Prediction Function
+# -------------------------------
+def predict_health(temp, hum, soil, light):
+    data = np.array([[temp, hum, soil, light]])
+    pred = model.predict(data)[0]
+    return "Healthy 🌱" if pred == 0 else "Unhealthy ⚠️"
+
+# -------------------------------
+# Flask App
+# -------------------------------
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Smart Plant Health Monitoring System is running 🌱"
+
+@app.route("/status")
+def status():
+    temp = get_temperature()
+    hum = get_humidity()
+    soil = get_soil_moisture()
+    light = get_light()
+
+    result = predict_health(temp, hum, soil, light)
+
+    return jsonify({
+        "temperature": temp,
+        "humidity": hum,
+        "soil_moisture": soil,
+        "light": light,
+        "plant_status": result
+    })
+
+# -------------------------------
+# Run App
+# -------------------------------
+if __name__ == "__main__":
+    app.run(debug=True)
